@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 47227e4cb8bd3ea4fa13cb6018be3d8e, type: 3}
+  m_Name: GameSettings
+  m_EditorClassIdentifier: 
+  GameSettings:
+    GameMode: 2
+    Level: 1
+    RandomCrystals: 0
+  AudioPlayer:
+    BallHitCrystalSound: {fileID: 8300000, guid: b6039e869b88dfe449ea7e1b11ca2a4c,
+      type: 3}
+    BallHitCrystalVolume: 1
+    GameStartSound: {fileID: 8300000, guid: 01173e6a0a8dfd94ca58cd38c265d681, type: 3}
+    BallFallSound: {fileID: 8300000, guid: 8cfe3be4d2987ee46be2a7ce11949781, type: 3}
+    BallTurnSound: {fileID: 8300000, guid: 73a6c62ddfe23b44bb0a7cc7bd564278, type: 3}
+    NextLevelSound: {fileID: 8300000, guid: 5e966ec0c45a41f43ae1c3504164d54f, type: 3}
