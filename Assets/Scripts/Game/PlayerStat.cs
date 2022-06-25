@@ -15,19 +15,14 @@ namespace AmazingTrack
         public int HighScore { get; private set; }
         public int Level { get; private set; } = 1;
 
-        SignalBus signalBus;
-
         [Inject]
-        public void Construct(SignalBus signalBus)
-        {
-            this.signalBus = signalBus;
-        }
+        private SignalBus signalBus;
 
         public void AddScore(int score)
         {
-            this.Score += score;
+            Score += score;
 
-            if (this.Score > Level * ScoreForNextLevel)
+            if (Score > Level * ScoreForNextLevel)
             {
                 Level++;
                 OnNextLevel();
@@ -36,8 +31,8 @@ namespace AmazingTrack
 
         public void GameStart(int level)
         {
-            this.Level = level;
-            this.Score = 0;
+            Level = level;
+            Score = 0;
             RestoreResult();
         }
 
@@ -65,6 +60,5 @@ namespace AmazingTrack
             if (PlayerPrefs.HasKey("AmazingTrack_HighScore"))
                 HighScore = PlayerPrefs.GetInt("AmazingTrack_HighScore");
         }
-
     }
 }

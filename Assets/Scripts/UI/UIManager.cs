@@ -1,8 +1,6 @@
 ﻿// Copyright 2019 Eugeny Novikov. Code under MIT license.
 
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using Zenject;
 
@@ -10,17 +8,15 @@ namespace AmazingTrack
 {
     public class UIManager : MonoBehaviour
     {
-        SignalBus signalBus;
-
-        public GameObject titleUI;
-        public GameObject playingUI;
-        public GameObject gameEndUI;
-
+        [SerializeField] GameObject titleUI;
+        [SerializeField] GameObject playingUI;
+        [SerializeField] GameObject gameEndUI;
+        
         [Inject]
-        public void Construct(SignalBus signalBus)
-        {
-            this.signalBus = signalBus;
+        private SignalBus signalBus;
 
+        private void Awake()
+        {
             signalBus.Subscribe<GameStateChangedSignal>(OnGameStateChanged);
         }
 
@@ -33,13 +29,13 @@ namespace AmazingTrack
         {
             switch (signal.State)
             {
-                case GameController.GameState.Title:
+                case GameState.Title:
                     SwitchUI(titleUI);
                     break;
-                case GameController.GameState.Playing:
+                case GameState.Playing:
                     SwitchUI(playingUI);
                     break;
-                case GameController.GameState.GameEnd:
+                case GameState.GameEnd:
                     SwitchUI(gameEndUI);
                     break;
                 default:
@@ -49,7 +45,7 @@ namespace AmazingTrack
 
         private void SwitchUI(GameObject ui)
         {
-            foreach (var item in new GameObject[] { titleUI, playingUI, gameEndUI })
+            foreach (var item in new[] { titleUI, playingUI, gameEndUI })
                 item.SetActive(item == ui);
         }
     }

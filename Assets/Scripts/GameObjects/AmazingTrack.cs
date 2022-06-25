@@ -16,51 +16,26 @@ namespace AmazingTrack
     /// 
     /// uses ObjectSpawner to create and delete (place in a pool) game objects
     /// </summary>
-    public class AmazingTrack : MonoBehaviour
+    public class AmazingTrack
     {
         private const int BlocksOnScreen = 30;
         private const float BallSpawnHeight = 0.75f;
-        private const float FallTimeBeforeDead = 2.0f;
 
-        private ObjectSpawner spawner;
-        private SignalBus signalBus;
+        private readonly ObjectSpawner spawner;
+        private readonly GameplayStrategiesProvider gameplayStrategies;
+
         private Vector3 lastSpawnPos = new Vector3(0f, 0f, 0f);
-        private Queue<GameObject> liveBlocksQueue = new Queue<GameObject>();
+        private readonly Queue<GameObject> liveBlocksQueue = new Queue<GameObject>();
 
-        private CrystalSpawnStrategy crystalSpawnStrategy;
-        private BlockHolesStrategy blockHolesStrategy;
-
-        public bool RandomCrystals = false;
-        public bool MakeHoles = false;
-        public int BlocksInGroup = 1;
+        private int BlocksInGroup = 1;
 
         public Ball Ball { get; private set; }
 
-        private CrystalSpawnStrategy GetCrystalSpawnStrategy()
+        public AmazingTrack(SignalBus signalBus, ObjectSpawner spawner,
+            GameplayStrategiesProvider gameplayStrategies)
         {
-            if (crystalSpawnStrategy == null)
-            {
-                if (RandomCrystals)
-                    crystalSpawnStrategy = new RandomCrystalSpawnStrategy();
-                else
-                    crystalSpawnStrategy = new ProgressiveCrystalSpawnStrategy();
-            }
-            return crystalSpawnStrategy;
-        }
-
-        private BlockHolesStrategy GetBlockHolesStrategy()
-        {
-            if (blockHolesStrategy == null)
-                blockHolesStrategy = new BlockHolesStrategy();
-            return blockHolesStrategy;
-        }
-
-
-        [Inject]
-        public void Construct(SignalBus signalBus, ObjectSpawner spawner)
-        {
-            this.signalBus = signalBus;
             this.spawner = spawner;
+            this.gameplayStrategies = gameplayStrategies;
 
             signalBus.Subscribe<BallMovedToNextBlockSignal>(OnBallMovedToNextBlock);
             signalBus.Subscribe<BallHitCrystalSignal>(OnBallHitCrystal);
@@ -68,11 +43,11 @@ namespace AmazingTrack
 
         public void CreateObjects(bool randomCrystals, bool makeHoles, int blocksInGroup, float ballSpeed)
         {
-            RandomCrystals = randomCrystals;
-            MakeHoles = makeHoles;
+            gameplayStrategies.RandomCrystals = randomCrystals;
+            gameplayStrategies.MakeHoles = makeHoles;
             BlocksInGroup = blocksInGroup;
 
-            GameObject startPlatform = spawner.SpawnStartPlatform(Color.gray);
+            var startPlatform = spawner.SpawnStartPlatform(Color.gray);
             liveBlocksQueue.Enqueue(startPlatform);
 
             lastSpawnPos = new Vector3(1f, 0f, 1f);
@@ -87,43 +62,40 @@ namespace AmazingTrack
 
         public void DestroyObjects()
         {
-            StopAllCoroutines();
-
             if (Ball != null)
-                DestroyImmediate(Ball.gameObject);
+                Object.DestroyImmediate(Ball.gameObject);
 
             liveBlocksQueue.Clear();
-
             spawner.Clear();
 
-            crystalSpawnStrategy = null;
+            gameplayStrategies.Reset();
         }
 
-        void SpawnNextBlocks()
+        private void SpawnNextBlocks()
         {
             bool rightDirection = Random.Range(0, 2) == 0;
 
             lastSpawnPos += rightDirection ? Vector3.right : Vector3.forward;
 
-            Color color = new Color(Random.value, Random.value, Random.value, 1.0f);
-            GameObject group = SpawnBlocksGroupWithCrystalAndHole(lastSpawnPos, rightDirection, color);
+            var color = new Color(Random.value, Random.value, Random.value, 1.0f);
+            var group = SpawnBlocksGroupWithCrystalAndHole(lastSpawnPos, rightDirection, color);
             liveBlocksQueue.Enqueue(group);
         }
 
-        GameObject SpawnBlocksGroupWithCrystalAndHole(Vector3 spawnPos, bool rightSide, Color color)
+        private GameObject SpawnBlocksGroupWithCrystalAndHole(Vector3 spawnPos, bool rightSide, Color color)
         {
             var group = spawner.SpawnBlocksGroup(BlocksInGroup, spawnPos, rightSide, color);
-            GameObject groupObj = group.gameObject;
+            var groupObj = group.gameObject;
 
-            if (MakeHoles)
+            Assert.IsTrue(groupObj.transform.childCount == BlocksInGroup);
+            
+            if (gameplayStrategies.MakeHoles)
             {
-                Assert.IsTrue(groupObj.transform.childCount == 3);
-
-                if (GetBlockHolesStrategy().IsTimeToHole())
+                if (gameplayStrategies.GetBlockHolesStrategy().IsTimeToHole())
                     groupObj.GetComponent<BlocksGroup>().MakeHole();
             }
 
-            if (GetCrystalSpawnStrategy().ShouldSpawn())
+            if (gameplayStrategies.GetCrystalSpawnStrategy().ShouldSpawn())
             {
                 var child = groupObj.transform.GetChild(Random.Range(0, BlocksInGroup - 1));
                 if (child.gameObject.activeSelf)
@@ -136,7 +108,7 @@ namespace AmazingTrack
         private void OnBallHitCrystal(BallHitCrystalSignal signal)
         {
             signal.Crystal.GetComponent<Crystal>().Take();
-            spawner.DespawnCrystal(signal.Crystal);
+            spawner.DespawnObject(signal.Crystal);
         }
 
         private void OnBallMovedToNextBlock(BallMovedToNextBlockSignal signal)
@@ -165,13 +137,15 @@ namespace AmazingTrack
             while (blockGroup != previousBlockGroup)
             {
                 blockGroup = liveBlocksQueue.Dequeue();
-                StartCoroutine(FallDownBlocks(blockGroup));
+                FallDownBlocks(blockGroup);
                 SpawnNextBlocks();
             }
         }
 
-        private IEnumerator FallDownBlocks(GameObject blockGroup)
+        private void FallDownBlocks(GameObject blockGroup)
         {
+            spawner.DespawnObjectDelayed(blockGroup, 2.0f);
+            
             foreach (Transform child in blockGroup.transform)
             {
                 var block = child.gameObject.GetComponent<Block>();
@@ -180,19 +154,13 @@ namespace AmazingTrack
                     block.FallDown();
 
                     if (block.HasCrystal())
-                        StartCoroutine(FallDownCrystal(block.GetCrystal()));
+                    {
+                        var crystal = block.GetCrystal().GetComponent<Crystal>();
+                        crystal.FallDown();
+                        spawner.DespawnObjectDelayed(block.GetCrystal(), 2.0f);
+                    }
                 }
             }
-
-            yield return new WaitForSeconds(FallTimeBeforeDead);
-            spawner.DespawnBlocksGroup(blockGroup);
-        }
-
-        private IEnumerator FallDownCrystal(GameObject crystal)
-        {
-            crystal.GetComponent<Crystal>().FallDown();
-            yield return new WaitForSeconds(FallTimeBeforeDead);
-            spawner.DespawnCrystal(crystal);
         }
     }
 }

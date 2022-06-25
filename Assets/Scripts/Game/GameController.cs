@@ -2,57 +2,52 @@
 
 using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
 using Zenject;
 
 namespace AmazingTrack
 {
+    public enum GameState
+    {
+        Title,
+        Playing,
+        GameOver,
+        GameEnd
+    }
+
+    public enum GameMode
+    {
+        Easy,
+        Normal,
+        Hard,
+        Holes
+    }
+
     /// <summary>
     /// Main game states, score calculation
     /// </summary>
     public class GameController : IInitializable, ITickable, IDisposable
     {
-        public enum GameState
-        {
-            Title, Playing, GameEnd
-        }
+        private GameState state;
 
-        public enum Mode
-        {
-            Easy,
-            Normal,
-            Hard,
-            Holes
-        }
+        [Inject] public readonly PlayerStat Stat;
 
-        GameState state;
+        private readonly AmazingTrack track;
+        private readonly CameraFollow camera;
+        private readonly SignalBus signalBus;
+        private readonly GameSettings gameSettings;
+        private readonly AudioSettings audioSettings;
+        private readonly AudioPlayer audioPlayer;
+        
+        private float gameOverTimer;
 
-        public GameState State
-        {
-            get { return state; }
-        }
-
-        [Inject]
-        public readonly PlayerStat Stat;
-
-        readonly AmazingTrack track;
-        readonly CameraFollow camera;
-        readonly SignalBus signalBus;
-        readonly Settings settings;
-        readonly AudioSettings audioSettings;
-        readonly AudioPlayer audioPlayer;
-
-        public GameController(SignalBus signalBus, AmazingTrack track, 
-            CameraFollow camera, Settings settings, AudioPlayer audioPlayer, AudioSettings audioSettings)
+        public GameController(SignalBus signalBus, AmazingTrack track, CameraFollow camera,
+            GameSettings gameSettings, AudioPlayer audioPlayer, AudioSettings audioSettings)
         {
             this.signalBus = signalBus;
             this.track = track;
             this.camera = camera;
-            this.settings = settings;
+            this.gameSettings = gameSettings;
             this.audioPlayer = audioPlayer;
             this.audioSettings = audioSettings;
         }
@@ -85,6 +80,7 @@ namespace AmazingTrack
                         if (Input.GetKeyDown(KeyCode.Escape))
                             Application.Quit();
                     }
+
                     break;
                 case GameState.Playing:
                     if (Input.GetKeyDown(KeyCode.Escape))
@@ -94,14 +90,19 @@ namespace AmazingTrack
                         track.Ball.ChangeDirection();
 
                     break;
+                case GameState.GameOver:
+                    gameOverTimer -= Time.deltaTime;
+                    if (gameOverTimer <= 0)
+                        ChangeState(GameState.GameEnd);
+                    break;
                 case GameState.GameEnd:
-                    {
-                        if (Input.GetMouseButtonDown(0))
-                            GameStart(true);
+                {
+                    if (Input.GetMouseButtonDown(0))
+                        GameStart(true);
 
-                        if (Input.GetKeyDown(KeyCode.Escape))
-                            ShowTitle();
-                    }
+                    if (Input.GetKeyDown(KeyCode.Escape))
+                        ShowTitle();
+                }
                     break;
                 default:
                     break;
@@ -115,12 +116,12 @@ namespace AmazingTrack
 
         private void InitScene()
         {
-            Stat.GameStart(settings.Level);
+            Stat.GameStart(gameSettings.Level);
 
-            track.CreateObjects(settings.RandomCrystals, settings.GameMode == Mode.Holes, 
+            track.CreateObjects(gameSettings.RandomCrystals, gameSettings.GameMode == GameMode.Holes,
                 GetBlocksCountInGroup(), GetBallSpeedForCurrentLevel());
 
-            camera.StartFolow(track.Ball.gameObject);
+            camera.StartFollow(track.Ball.gameObject);
         }
 
         private void ChangeState(GameState state)
@@ -131,7 +132,7 @@ namespace AmazingTrack
 
         private void OnBallCrashed()
         {
-            GameEnd();
+            GameOver();
         }
 
         private void OnBallMovedToNextBlock(BallMovedToNextBlockSignal signal)
@@ -158,7 +159,7 @@ namespace AmazingTrack
 
         public float GetBallSpeedForCurrentLevel()
         {
-            return settings.BallInitialSpeed + Stat.Level - 1;
+            return gameSettings.BallInitialSpeed + Stat.Level - 1;
         }
 
         public void ShowTitle(bool clearScene = true)
@@ -169,10 +170,10 @@ namespace AmazingTrack
             ChangeState(GameState.Title);
         }
 
-        public void GameStart(Mode mode)
+        public void GameStart(GameMode gameMode)
         {
-            bool recreate = settings.GameMode != mode;
-            settings.GameMode = mode;
+            bool recreate = gameSettings.GameMode != gameMode;
+            gameSettings.GameMode = gameMode;
             GameStart(recreate);
         }
 
@@ -189,7 +190,7 @@ namespace AmazingTrack
             audioPlayer.Play(audioSettings.GameStartSound);
         }
 
-        private void GameEnd()
+        private void GameOver()
         {
             Stat.GameEnd();
 
@@ -197,41 +198,25 @@ namespace AmazingTrack
 
             audioPlayer.Play(audioSettings.BallFallSound);
 
-            // swith to game end after 1 sec
-            track.StartCoroutine(SwithToGameEndState());
-        }
-
-        private IEnumerator SwithToGameEndState()
-        {
-            yield return new WaitForSeconds(1.0f);
-            ChangeState(GameState.GameEnd);
+            gameOverTimer = 1.0f;
+            ChangeState(GameState.GameOver);
         }
 
         private int GetBlocksCountInGroup()
         {
-            switch (settings.GameMode)
+            switch (gameSettings.GameMode)
             {
-                case Mode.Easy:
+                case GameMode.Easy:
                     return 3;
-                case Mode.Normal:
+                case GameMode.Normal:
                     return 2;
-                case Mode.Hard:
+                case GameMode.Hard:
                     return 1;
-                case Mode.Holes:
+                case GameMode.Holes:
                     return 3;
                 default:
                     return 2;
             }
-        }
-
-        [Serializable]
-        public class Settings
-        {
-            public float BallInitialSpeed = 5f;
-            public Mode GameMode = Mode.Normal;
-            [Range(1, 10)]
-            public int Level = 1;
-            public bool RandomCrystals = false;
         }
     }
 }

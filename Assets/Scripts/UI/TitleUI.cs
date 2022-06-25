@@ -1,41 +1,33 @@
 ﻿// Copyright 2019 Eugeny Novikov. Code under MIT license.
 
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
 using Zenject;
 
 namespace AmazingTrack
 {
     public class TitleUI : MonoBehaviour
     {
-        GameController gameController;
-
-        [Inject]
-        public void Construct(GameController gameController)
-        {
-            this.gameController = gameController;
-        }
+        [Inject] 
+        private GameController gameController;
 
         public void OnEasyButtonClick()
         {
-            gameController.GameStart(GameController.Mode.Easy);
+            gameController.GameStart(GameMode.Easy);
         }
 
         public void OnNormalButtonClick()
         {
-            gameController.GameStart(GameController.Mode.Normal);
+            gameController.GameStart(GameMode.Normal);
         }
 
         public void OnHardButtonClick()
         {
-            gameController.GameStart(GameController.Mode.Hard);
+            gameController.GameStart(GameMode.Hard);
         }
 
         public void OnHolesButtonClick()
         {
-            gameController.GameStart(GameController.Mode.Holes);
+            gameController.GameStart(GameMode.Holes);
         }
     }
 }

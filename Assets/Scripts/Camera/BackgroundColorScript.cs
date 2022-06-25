@@ -1,29 +1,27 @@
 ﻿// Copyright 2019 Eugeny Novikov. Code under MIT license.
 
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace AmazingTrack
 {
     public class BackgroundColorScript : MonoBehaviour
     {
-        public Color Color1 = Color.red;
-        public Color Color2 = Color.blue;
-        public float Duration = 5.0f;
+        [SerializeField] Color color1 = Color.red;
+        [SerializeField] Color color2 = Color.blue;
+        [SerializeField] float duration = 5.0f;
 
         private Camera cam;
 
-        void Start()
+        private void Start()
         {
             cam = GetComponent<Camera>();
             cam.clearFlags = CameraClearFlags.SolidColor;
         }
 
-        void Update()
+        private void Update()
         {
-            float t = Mathf.PingPong(Time.time, Duration) / Duration;
-            cam.backgroundColor = Color.Lerp(Color1, Color2, t);
+            float t = Mathf.PingPong(Time.time, duration) / duration;
+            cam.backgroundColor = Color.Lerp(color1, color2, t);
         }
     }
 }

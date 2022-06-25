@@ -1,8 +1,6 @@
 ﻿// Copyright 2019 Eugeny Novikov. Code under MIT license.
 
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using Zenject;
 
@@ -27,7 +25,10 @@ namespace AmazingTrack
             this.signalBus = signalBus;
             this.audioPlayer = audioPlayer;
             this.audioSettings = audioSettings;
+        }
 
+        private void Awake()
+        {
             rb = GetComponent<Rigidbody>();
         }
 
@@ -56,34 +57,37 @@ namespace AmazingTrack
             return false;
         }
 
-        private bool CheckBlockUnder(out GameObject newBlock, out GameObject previousBlock)
+        private bool CheckBlockUnder(out GameObject newBlock)
         {
             newBlock = null;
-            previousBlock = null;
 
-            if (CheckObjectUnder(out GameObject hitObject))
+            if (CheckObjectUnder(out var hitObject))
             {
-                if (hitObject.tag == Tags.Block)
+                if (hitObject.CompareTag(Tags.Block))
                 {
                     newBlock = hitObject;
-                    previousBlock = prevHitObject;
-                    prevHitObject = hitObject;
                     return true;
                 }
             }
             return false;
         }
 
-        void Update()
+        private void FixedUpdate()
         {
+            if (direction == Vector3.zero)
+                return;
+            
             bool controlled = IsControlled();
 
             if (controlled)
             {
-                if (CheckBlockUnder(out GameObject newBlock, out GameObject previousBlock))
+                if (CheckBlockUnder(out var block))
                 {
-                    if (newBlock != previousBlock)
-                        OnCollideWithBlock(newBlock, previousBlock);
+                    if (block != prevHitObject)
+                    {
+                        OnCollideWithBlock(block, prevHitObject);
+                        prevHitObject = block;
+                    }
                 }
                 else
                 {
@@ -97,7 +101,7 @@ namespace AmazingTrack
 
         private void OnTriggerEnter(Collider other)
         {
-            if (other.tag == Tags.Crystal)
+            if (other.CompareTag(Tags.Crystal))
                 OnCollideWithCrystal(other.gameObject);
         }
 

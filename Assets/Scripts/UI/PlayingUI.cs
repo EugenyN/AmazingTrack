@@ -1,7 +1,5 @@
 ﻿// Copyright 2019 Eugeny Novikov. Code under MIT license.
 
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using Zenject;
@@ -10,23 +8,36 @@ namespace AmazingTrack
 {
     public class PlayingUI : MonoBehaviour
     {
-        public Text scoreText;
-        public Text highScoreText;
-        public Text levelText;
+        [SerializeField] Text scoreText;
+        [SerializeField] Text highScoreText;
+        [SerializeField] Text levelText;
 
-        GameController gameController;
+        [Inject] 
+        private GameController gameController;
 
-        [Inject]
-        public void Construct(GameController gameController)
+        private int score;
+        private int highScore;
+        private int level;
+        
+        private void Update()
         {
-            this.gameController = gameController;
-        }
+            if (gameController.Stat.Score != score)
+            {
+                scoreText.text = "Score: " + gameController.Stat.Score;
+                score = gameController.Stat.Score;
+            }
 
-        void Update()
-        {
-            scoreText.text = "Score: " + gameController.Stat.Score;
-            highScoreText.text = "High: " + gameController.Stat.HighScore;
-            levelText.text = "Level: " + gameController.Stat.Level;
+            if (gameController.Stat.HighScore != highScore)
+            {
+                highScoreText.text = "High: " + gameController.Stat.HighScore;
+                highScore = gameController.Stat.HighScore;
+            }
+
+            if (gameController.Stat.Level != level)
+            {
+                levelText.text = "Level: " + gameController.Stat.Level;
+                level = gameController.Stat.Level;
+            }
         }
     }
 }

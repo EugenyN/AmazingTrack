@@ -11,7 +11,7 @@ namespace AmazingTrack
 
     public class RandomCrystalSpawnStrategy : CrystalSpawnStrategy
     {
-        const int Chance = 5;
+        private const int Chance = 5;
 
         public override bool ShouldSpawn()
         {
@@ -21,10 +21,10 @@ namespace AmazingTrack
 
     public class ProgressiveCrystalSpawnStrategy : CrystalSpawnStrategy
     {
-        const int ProgressiveStep = 5;
+        private const int ProgressiveStep = 5;
 
-        int blockCounter = -1;
-        int blockWithCrystalCounter = 0;
+        private int blockCounter = -1;
+        private int blockWithCrystalCounter = 0;
 
         public override bool ShouldSpawn()
         {

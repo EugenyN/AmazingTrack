@@ -1,10 +1,5 @@
 ﻿// Copyright 2019 Eugeny Novikov. Code under MIT license.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
 
 namespace AmazingTrack
@@ -15,8 +10,8 @@ namespace AmazingTrack
 
     public class BallMovedToNextBlockSignal
     {
-        public GameObject Block;
-        public GameObject PreviousBlock;
+        public readonly GameObject Block;
+        public readonly GameObject PreviousBlock;
 
         public BallMovedToNextBlockSignal(GameObject block, GameObject previousBlock)
         {
@@ -27,7 +22,7 @@ namespace AmazingTrack
 
     public class BallHitCrystalSignal
     {
-        public GameObject Crystal;
+        public readonly GameObject Crystal;
 
         public BallHitCrystalSignal(GameObject crystal)
         {
@@ -37,9 +32,9 @@ namespace AmazingTrack
 
     public class GameStateChangedSignal
     {
-        public GameController.GameState State;
+        public readonly GameState State;
 
-        public GameStateChangedSignal(GameController.GameState state)
+        public GameStateChangedSignal(GameState state)
         {
             State = state;
         }

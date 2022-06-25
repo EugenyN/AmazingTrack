@@ -1,7 +1,5 @@
 ﻿// Copyright 2019 Eugeny Novikov. Code under MIT license.
 
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using Zenject;
@@ -10,15 +8,10 @@ namespace AmazingTrack
 {
     public class GameEndUI : MonoBehaviour
     {
-        public Text scoreText;
-
-        GameController gameController;
+        [SerializeField] Text scoreText;
 
         [Inject]
-        public void Construct(GameController gameController)
-        {
-            this.gameController = gameController;
-        }
+        private GameController gameController;
 
         private void OnEnable()
         {

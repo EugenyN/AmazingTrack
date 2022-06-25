@@ -1,25 +1,24 @@
 ﻿// Copyright 2019 Eugeny Novikov. Code under MIT license.
 
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Assertions;
-using UnityEngine.SceneManagement;
+using Zenject;
 
 namespace AmazingTrack
 {
-    public class ObjectSpawner
+    public class ObjectSpawner : ITickable
     {
-        readonly Crystal.Pool crystalPool;
-        readonly BlocksGroup.Pool blocksGroupPool;
-        readonly Block.Factory blockFactory;
-        readonly Ball.Factory ballFactory;
+        private readonly Crystal.Pool crystalPool;
+        private readonly BlocksGroup.Pool blocksGroupPool;
+        private readonly Block.Factory blockFactory;
+        private readonly Ball.Factory ballFactory;
 
-        readonly Vector3 CrystalOffset = new Vector3(0, 0.8f, 0);
+        private readonly Vector3 CrystalOffset = new Vector3(0, 0.8f, 0);
 
+        private readonly List<(GameObject, float)> objectsForDespawn = new();
 
         public ObjectSpawner(BlocksGroup.Pool blocksGroupPool, Block.Factory blockFactory,
-             Crystal.Pool crystalPool, Ball.Factory ballFactory)
+            Crystal.Pool crystalPool, Ball.Factory ballFactory)
         {
             this.blocksGroupPool = blocksGroupPool;
             this.blockFactory = blockFactory;
@@ -30,14 +29,16 @@ namespace AmazingTrack
         public void Clear()
         {
             foreach (var obj in GameObject.FindGameObjectsWithTag(Tags.Crystal))
-                DespawnCrystal(obj);
+                DespawnObject(obj);
 
             crystalPool.Clear();
 
             foreach (var obj in GameObject.FindGameObjectsWithTag(Tags.BlocksGroup))
-                DespawnBlocksGroup(obj);
+                DespawnObject(obj);
 
             blocksGroupPool.Clear();
+
+            objectsForDespawn.Clear();
         }
 
         public GameObject SpawnBall(Vector3 pos)
@@ -49,7 +50,7 @@ namespace AmazingTrack
 
         public GameObject SpawnStartPlatform(Color color)
         {
-            GameObject startPlatform = new GameObject("StartBlocks");
+            var startPlatform = new GameObject("StartBlocks");
             startPlatform.tag = Tags.BlocksGroup;
 
             for (int i = -1; i <= 1; i++)
@@ -63,10 +64,10 @@ namespace AmazingTrack
             return startPlatform;
         }
 
-        private GameObject SpawnBlock(Vector3 pos, Transform parent, Color color)
+        public GameObject SpawnBlock(Vector3 pos, Transform parent, Color color)
         {
             var block = blockFactory.Create();
-            block.Reset(pos, parent, color);
+            block.Reinit(pos, parent, color);
             return block.gameObject;
         }
 
@@ -80,12 +81,7 @@ namespace AmazingTrack
             var crystal = crystalPool.Spawn(pos, parent);
             return crystal.gameObject;
         }
-
-        public void DespawnCrystal(GameObject gameObject)
-        {
-            crystalPool.Despawn(gameObject.GetComponent<Crystal>());
-        }
-
+        
         public GameObject SpawnBlocksGroup(int count, Vector3 spawnPos, bool rightSide, Color color)
         {
             var group = blocksGroupPool.Spawn(count, rightSide, spawnPos, color);
@@ -93,13 +89,44 @@ namespace AmazingTrack
             return group.gameObject;
         }
 
-        public void DespawnBlocksGroup(GameObject gameObject)
+        public void DespawnObject(GameObject gameObject)
         {
             var group = gameObject.GetComponent<BlocksGroup>();
             if (group != null)
+            {
                 blocksGroupPool.Despawn(group);
-            else
-                GameObject.Destroy(gameObject);
+                return;
+            }
+            
+            var crystal = gameObject.GetComponent<Crystal>();
+            if (crystal != null)
+            {
+                crystalPool.Despawn(crystal);
+                return;
+            }
+            
+            Object.Destroy(gameObject);
+        }
+
+        public void DespawnObjectDelayed(GameObject gameObject, float delay)
+        {
+            objectsForDespawn.Add((gameObject, delay));
+        }
+
+        public void Tick()
+        {
+            for (int i = objectsForDespawn.Count - 1; i >= 0; i--)
+            {
+                var (gameObject, time) = objectsForDespawn[i];
+                time -= Time.deltaTime;
+                objectsForDespawn[i] = (gameObject, time);
+                
+                if (time <= 0)
+                {
+                    objectsForDespawn.RemoveAt(i);
+                    DespawnObject(gameObject);
+                }
+            }
         }
     }
 }

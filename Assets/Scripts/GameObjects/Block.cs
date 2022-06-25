@@ -1,7 +1,5 @@
 ﻿// Copyright 2019 Eugeny Novikov. Code under MIT license.
 
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using Zenject;
 
@@ -12,7 +10,8 @@ namespace AmazingTrack
     {
         private const float FallDownDelay = 0.3f;
 
-        public bool Falling = false;
+        public bool Falling;
+        public float FallingTimer;
 
         public bool HasCrystal()
         {
@@ -26,27 +25,30 @@ namespace AmazingTrack
             return gameObject.transform.GetChild(0).gameObject;
         }
 
-        public void Reset(Vector3 position, Transform parent, Color color)
+        public void Reinit(Vector3 position, Transform parent, Color color)
         {
-            gameObject.SetActive(true);
             GetComponent<Rigidbody>().isKinematic = true;
             GetComponent<Renderer>().material.color = color;
-            transform.rotation = Quaternion.identity;
-            transform.position = position;
             transform.parent = parent;
+            transform.SetPositionAndRotation(position, Quaternion.identity);
             Falling = false;
+            gameObject.SetActive(true);
         }
 
         public void FallDown()
         {
             Falling = true;
-            StartCoroutine(FallDownInt());
+            FallingTimer = FallDownDelay;
         }
 
-        IEnumerator FallDownInt()
+        private void Update()
         {
-            yield return new WaitForSeconds(FallDownDelay);
-            GetComponent<Rigidbody>().isKinematic = false;
+            if (Falling)
+            {
+                FallingTimer -= Time.deltaTime;
+                if (FallingTimer <= 0.0f)
+                    GetComponent<Rigidbody>().isKinematic = false;
+            }
         }
 
         public class Factory : PlaceholderFactory<Block>
