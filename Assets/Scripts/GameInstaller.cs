@@ -31,9 +31,11 @@ namespace AmazingTrack
             // pools
 
             Container.BindMemoryPool<BlocksGroup, BlocksGroup.Pool>()
-                .WithInitialSize(30).FromComponentInNewPrefab(Prefabs.BlocksGroupPrefab);
+                .WithInitialSize(30).FromComponentInNewPrefab(Prefabs.BlocksGroupPrefab)
+                .UnderTransformGroup("ObjectsPool");
             Container.BindMemoryPool<Crystal, Crystal.Pool>()
-                .WithInitialSize(5).FromComponentInNewPrefab(Prefabs.CrystalPrefab);
+                .WithInitialSize(5).FromComponentInNewPrefab(Prefabs.CrystalPrefab)
+                .UnderTransformGroup("ObjectsPool");
 
             // signals
 

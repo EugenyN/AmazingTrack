@@ -72,7 +72,7 @@ namespace AmazingTrack
             return false;
         }
 
-        private void FixedUpdate()
+        private void Update()
         {
             if (direction == Vector3.zero)
                 return;
