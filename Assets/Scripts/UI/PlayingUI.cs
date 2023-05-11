@@ -1,6 +1,4 @@
-﻿// Copyright 2019 Eugeny Novikov. Code under MIT license.
-
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 using Zenject;
 
@@ -11,32 +9,33 @@ namespace AmazingTrack
         [SerializeField] Text scoreText;
         [SerializeField] Text highScoreText;
         [SerializeField] Text levelText;
-
-        [Inject] 
-        private GameController gameController;
-
+        
         private int score;
         private int highScore;
         private int level;
+
+        [Inject] private PlayerStatService playerStatService;
         
         private void Update()
         {
-            if (gameController.Stat.Score != score)
+            ref var playerStatComponent = ref playerStatService.GetPlayerStat();
+            
+            if (playerStatComponent.Score != score)
             {
-                scoreText.text = "Score: " + gameController.Stat.Score;
-                score = gameController.Stat.Score;
+                scoreText.text = "Score: " + playerStatComponent.Score;
+                score = playerStatComponent.Score;
             }
 
-            if (gameController.Stat.HighScore != highScore)
+            if (playerStatComponent.HighScore != highScore)
             {
-                highScoreText.text = "High: " + gameController.Stat.HighScore;
-                highScore = gameController.Stat.HighScore;
+                highScoreText.text = "High: " + playerStatComponent.HighScore;
+                highScore = playerStatComponent.HighScore;
             }
 
-            if (gameController.Stat.Level != level)
+            if (playerStatComponent.Level != level)
             {
-                levelText.text = "Level: " + gameController.Stat.Level;
-                level = gameController.Stat.Level;
+                levelText.text = "Level: " + playerStatComponent.Level;
+                level = playerStatComponent.Level;
             }
         }
     }

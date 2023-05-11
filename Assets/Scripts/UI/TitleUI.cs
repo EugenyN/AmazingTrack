@@ -1,6 +1,4 @@
-﻿// Copyright 2019 Eugeny Novikov. Code under MIT license.
-
-using UnityEngine;
+﻿using UnityEngine;
 using Zenject;
 
 namespace AmazingTrack
@@ -8,26 +6,26 @@ namespace AmazingTrack
     public class TitleUI : MonoBehaviour
     {
         [Inject] 
-        private GameController gameController;
+        private GameSystem gameSystem;
 
         public void OnEasyButtonClick()
         {
-            gameController.GameStart(GameMode.Easy);
+            gameSystem.GameStart(GameMode.Easy);
         }
 
         public void OnNormalButtonClick()
         {
-            gameController.GameStart(GameMode.Normal);
+            gameSystem.GameStart(GameMode.Normal);
         }
 
         public void OnHardButtonClick()
         {
-            gameController.GameStart(GameMode.Hard);
+            gameSystem.GameStart(GameMode.Hard);
         }
 
         public void OnHolesButtonClick()
         {
-            gameController.GameStart(GameMode.Holes);
+            gameSystem.GameStart(GameMode.Holes);
         }
     }
 }

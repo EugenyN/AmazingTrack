@@ -1,6 +1,5 @@
-// Copyright 2019 Eugeny Novikov. Code under MIT license.
-
 using Zenject;
+using Leopotam.EcsLite;
 
 namespace AmazingTrack
 {
@@ -10,41 +9,48 @@ namespace AmazingTrack
 
         public override void InstallBindings()
         {
+            // ecs
+            
+            Container.BindInstance(new EcsWorld());
+            Container.BindInterfacesAndSelfTo<EcsSystems>().AsSingle();
+            Container.BindInterfacesTo<EcsStartup>().AsSingle();
+            
             // settings
 
             Container.BindInstance(Prefabs);
 
-            // types
+            // systems
             
-            Container.BindInterfacesAndSelfTo<GameController>().AsSingle();
-            Container.Bind<AmazingTrack>().AsSingle();
+            Container.BindInterfacesTo<AndroidRefreshRateFix>().AsSingle();
+            Container.BindInterfacesTo<CameraFollowSystem>().AsSingle();
+            Container.BindInterfacesTo<BackgroundColorSystem>().AsSingle();
             Container.BindInterfacesAndSelfTo<ObjectSpawner>().AsSingle();
             Container.Bind<GameplayStrategiesProvider>().AsSingle();
+            Container.BindInterfacesAndSelfTo<BallSystem>().AsSingle();
+            Container.BindInterfacesAndSelfTo<BlockSystem>().AsSingle();
+            Container.BindInterfacesTo<FallingSystem>().AsSingle();
             Container.Bind<AudioPlayer>().AsSingle();
-            Container.Bind<PlayerStat>().AsSingle();
+            Container.Bind<PlayerStatService>().AsSingle();
+            Container.BindInterfacesAndSelfTo<GameSystem>().AsSingle();
+            Container.BindInterfacesAndSelfTo<CrystalSystem>().AsSingle();
+            
+            Container.BindInterfacesTo<DeleteEventsSystem<BallPassedComponent>>().AsSingle();
+            Container.BindInterfacesTo<DeleteEventsSystem<BallHitComponent>>().AsSingle();
+            Container.BindInterfacesTo<DeleteEventsSystem<PlayerLevelUpComponent>>().AsSingle();
 
             // factories
 
-            Container.BindFactory<Ball, Ball.Factory>().FromComponentInNewPrefab(Prefabs.BallPrefab);
-            Container.BindFactory<Block, Block.Factory>().FromComponentInNewPrefab(Prefabs.BlockPrefab);
+            Container.BindFactory<BallView, BallViewFactory>().FromComponentInNewPrefab(Prefabs.BallPrefab);
+            Container.BindFactory<BlockPartView, BlockPartViewFactory>().FromComponentInNewPrefab(Prefabs.BlockPartPrefab);
 
             // pools
 
-            Container.BindMemoryPool<BlocksGroup, BlocksGroup.Pool>()
-                .WithInitialSize(30).FromComponentInNewPrefab(Prefabs.BlocksGroupPrefab)
+            Container.BindMemoryPool<BlockView, BlockViewPool>()
+                .WithInitialSize(30).FromComponentInNewPrefab(Prefabs.BlockPrefab)
                 .UnderTransformGroup("ObjectsPool");
-            Container.BindMemoryPool<Crystal, Crystal.Pool>()
+            Container.BindMemoryPool<CrystalView, CrystalViewPool>()
                 .WithInitialSize(5).FromComponentInNewPrefab(Prefabs.CrystalPrefab)
                 .UnderTransformGroup("ObjectsPool");
-
-            // signals
-
-            SignalBusInstaller.Install(Container);
-            Container.DeclareSignal<BallCrashedSignal>();
-            Container.DeclareSignal<BallMovedToNextBlockSignal>();
-            Container.DeclareSignal<BallHitCrystalSignal>();
-            Container.DeclareSignal<GameStateChangedSignal>();
-            Container.DeclareSignal<LevelUpSignal>();
         }
     }
 }

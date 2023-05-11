@@ -1,5 +1,3 @@
-// Copyright 2019 Eugeny Novikov. Code under MIT license.
-
 using UnityEngine;
 using Zenject;
 

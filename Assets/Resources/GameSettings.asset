@@ -14,9 +14,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   GameSettings:
     BallInitialSpeed: 5
-    GameMode: 2
+    GameMode: 1
     Level: 1
     RandomCrystals: 0
+    BackgroundColor1: {r: 0.7058824, g: 0.36862746, b: 0.36862746, a: 1}
+    BackgroundColor2: {r: 0.39215687, g: 0.39215687, b: 0.7372549, a: 1}
+    BackgroundChangeDuration: 5
+    CrystalMask:
+      serializedVersion: 2
+      m_Bits: 64
   AudioPlayer:
     BallHitCrystalSound: {fileID: 8300000, guid: b6039e869b88dfe449ea7e1b11ca2a4c,
       type: 3}

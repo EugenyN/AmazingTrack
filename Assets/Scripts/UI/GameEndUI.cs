@@ -1,6 +1,4 @@
-﻿// Copyright 2019 Eugeny Novikov. Code under MIT license.
-
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 using Zenject;
 
@@ -10,13 +8,14 @@ namespace AmazingTrack
     {
         [SerializeField] Text scoreText;
 
-        [Inject]
-        private GameController gameController;
-
+        [Inject] private PlayerStatService playerStatService;
+        
         private void OnEnable()
         {
-            string text = "Your score: " + gameController.Stat.Score;
-            bool newRecord = gameController.Stat.Score == gameController.Stat.HighScore;
+            ref var playerStatComponent = ref playerStatService.GetPlayerStat();
+            
+            string text = "Your score: " + playerStatComponent.Score;
+            bool newRecord = playerStatComponent.Score == playerStatComponent.HighScore;
             if (newRecord)
                 text += "\nNew record !";
 
